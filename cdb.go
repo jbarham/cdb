@@ -1,3 +1,7 @@
+// Read and write cdb ("constant database") files.
+//
+// See the original cdb specification and C implementation by D. J. Bernstein
+// at http://cr.yp.to/cdb.html.
 package cdb
 
 import (
