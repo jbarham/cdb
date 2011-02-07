@@ -1,0 +1,12 @@
+include $(GOROOT)/src/Make.inc
+
+all: cdbmake cdbdump
+
+cdbmake: cdbmake.go
+	$(GC) cdbmake.go && $(LD) -o cdbmake cdbmake.$(O)
+
+cdbdump: cdbdump.go
+	$(GC) cdbdump.go && $(LD) -o cdbdump cdbdump.$(O)
+
+clean:
+	rm cdbmake cdbdump
