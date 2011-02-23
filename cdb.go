@@ -8,6 +8,7 @@ import (
 	"os"
 	"io"
 	"bytes"
+	"runtime"
 	"encoding/binary"
 )
 
@@ -37,6 +38,7 @@ func Open(name string) (*Cdb, os.Error) {
 	}
 	c := New(f)
 	c.closer = f
+	runtime.SetFinalizer(c, (*Cdb).Close)
 	return c, nil
 }
 
@@ -45,6 +47,7 @@ func (c *Cdb) Close() (err os.Error) {
 	if c.closer != nil {
 		err = c.closer.Close()
 		c.closer = nil
+		runtime.SetFinalizer(c, nil)
 	}
 	return err
 }

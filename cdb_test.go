@@ -36,7 +36,10 @@ func TestCdb(t *testing.T) {
 	}
 
 	// Test reading records
-	c := New(tmp)
+	c, err := Open(tmp.Name())
+	if err != nil {
+		t.Fatalf("Error opening %s: %s", tmp.Name(), err)
+	}
 	for _, rec := range records {
 		key := []byte(rec.key)
 		values := rec.values
