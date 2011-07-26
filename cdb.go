@@ -32,7 +32,7 @@ type Cdb struct {
 // Open opens the named file read-only and returns a new Cdb object.  The file
 // should exist and be a cdb-format database file.
 func Open(name string) (*Cdb, os.Error) {
-	f, err := os.Open(name, os.O_RDONLY, 0600)
+	f, err := os.Open(name)
 	if err != nil {
 		return nil, err
 	}
