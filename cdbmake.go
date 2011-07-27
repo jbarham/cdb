@@ -33,7 +33,7 @@ func main() {
 		tmp, err = ioutil.TempFile(dir, "")
 		exitOnErr(err)
 	} else if len(args) == 2 {
-		tmp, err = os.Open(args[1], os.O_RDWR|os.O_CREAT, 0644)
+		tmp, err = os.OpenFile(args[1], os.O_RDWR|os.O_CREATE, 0644)
 		exitOnErr(err)
 	} else {
 		usage()
