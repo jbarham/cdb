@@ -1,9 +1,9 @@
 package main
 
 import (
-	"os"
 	"bufio"
 	"github.com/jbarham/cdb.go"
+	"os"
 )
 
 func main() {

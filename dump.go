@@ -1,21 +1,20 @@
 package cdb
 
 import (
-	"os"
-	"io"
-	"fmt"
 	"bufio"
 	"encoding/binary"
+	"fmt"
+	"io"
 )
 
 // Dump reads the cdb-formatted data in r and dumps it as a series of formatted
 // records (+klen,dlen:key->data\n) and a final newline to w.
 // The output of Dump is suitable as input to Make.
 // See http://cr.yp.to/cdb/cdbmake.html for details on the record format.
-func Dump(w io.Writer, r io.Reader) (err os.Error) {
+func Dump(w io.Writer, r io.Reader) (err error) {
 	defer func() { // Centralize exception handling.
 		if e := recover(); e != nil {
-			err = e.(os.Error)
+			err = e.(error)
 		}
 	}()
 
@@ -65,7 +64,7 @@ func (rw *recWriter) writeString(s string) {
 }
 
 func (rw *recWriter) copyn(r io.Reader, n uint32) {
-	if _, err := io.Copyn(rw, r, int64(n)); err != nil {
+	if _, err := io.CopyN(rw, r, int64(n)); err != nil {
 		panic(err)
 	}
 }

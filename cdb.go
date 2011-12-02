@@ -5,11 +5,11 @@
 package cdb
 
 import (
-	"os"
-	"io"
 	"bytes"
-	"runtime"
 	"encoding/binary"
+	"io"
+	"os"
+	"runtime"
 )
 
 const (
@@ -31,7 +31,7 @@ type Cdb struct {
 
 // Open opens the named file read-only and returns a new Cdb object.  The file
 // should exist and be a cdb-format database file.
-func Open(name string) (*Cdb, os.Error) {
+func Open(name string) (*Cdb, error) {
 	f, err := os.Open(name)
 	if err != nil {
 		return nil, err
@@ -43,7 +43,7 @@ func Open(name string) (*Cdb, os.Error) {
 }
 
 // Close closes the cdb for any further reads.
-func (c *Cdb) Close() (err os.Error) {
+func (c *Cdb) Close() (err error) {
 	if c.closer != nil {
 		err = c.closer.Close()
 		c.closer = nil
@@ -62,7 +62,7 @@ func New(r io.ReaderAt) *Cdb {
 
 // Data returns the first data value for the given key.
 // If no such record exists, it returns EOF.
-func (c *Cdb) Data(key []byte) (data []byte, err os.Error) {
+func (c *Cdb) Data(key []byte) (data []byte, err error) {
 	c.FindStart()
 	if err = c.find(key); err != nil {
 		return nil, err
@@ -81,7 +81,7 @@ func (c *Cdb) FindStart() { c.loop = 0 }
 // If there are no more records for the given key, it returns EOF.
 // FindNext acts as an iterator: The iteration should be initialized by calling
 // FindStart and all subsequent calls to FindNext should use the same key value.
-func (c *Cdb) FindNext(key []byte) (rdata *io.SectionReader, err os.Error) {
+func (c *Cdb) FindNext(key []byte) (rdata *io.SectionReader, err error) {
 	if err := c.find(key); err != nil {
 		return nil, err
 	}
@@ -90,15 +90,15 @@ func (c *Cdb) FindNext(key []byte) (rdata *io.SectionReader, err os.Error) {
 
 // Find returns the first data value for the given key as a SectionReader.
 // Find is the same as FindStart followed by FindNext.
-func (c *Cdb) Find(key []byte) (rdata *io.SectionReader, err os.Error) {
+func (c *Cdb) Find(key []byte) (rdata *io.SectionReader, err error) {
 	c.FindStart()
 	return c.FindNext(key)
 }
 
-func (c *Cdb) find(key []byte) (err os.Error) {
+func (c *Cdb) find(key []byte) (err error) {
 	defer func() {
 		if e := recover(); e != nil {
-			err = e.(os.Error)
+			err = e.(error)
 		}
 	}()
 
@@ -121,7 +121,7 @@ func (c *Cdb) find(key []byte) (err os.Error) {
 	for c.loop < c.hslots {
 		h, pos = c.readNums(c.kpos)
 		if pos == 0 {
-			return os.EOF
+			return io.EOF
 		}
 		c.loop++
 		c.kpos += 8
@@ -140,10 +140,10 @@ func (c *Cdb) find(key []byte) (err os.Error) {
 		}
 	}
 
-	return os.EOF
+	return io.EOF
 }
 
-func (c *Cdb) read(buf []byte, pos uint32) os.Error {
+func (c *Cdb) read(buf []byte, pos uint32) error {
 	_, err := c.r.ReadAt(buf, int64(pos))
 	return err
 }

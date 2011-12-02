@@ -1,22 +1,22 @@
 package cdb
 
 import (
-	"os"
-	"io"
 	"bufio"
-	"strconv"
-	"container/vector"
 	"encoding/binary"
+	"errors"
+	"io"
+	"os"
+	"strconv"
 )
 
-var BadFormatError = os.NewError("bad format")
+var BadFormatError = errors.New("bad format")
 
 // Make reads cdb-formatted records from r and writes a cdb-format database
 // to w.  See the documentation for Dump for details on the input record format. 
-func Make(w io.WriteSeeker, r io.Reader) (err os.Error) {
+func Make(w io.WriteSeeker, r io.Reader) (err error) {
 	defer func() { // Centralize error handling.
 		if e := recover(); e != nil {
-			err = e.(os.Error)
+			err = e.(error)
 		}
 	}()
 
@@ -30,7 +30,7 @@ func Make(w io.WriteSeeker, r io.Reader) (err os.Error) {
 	hash := cdbHash()
 	hw := io.MultiWriter(hash, wb) // Computes hash when writing record key.
 	rr := &recReader{rb}
-	htables := make(map[uint32]*vector.Vector)
+	htables := make(map[uint32][]slot)
 	pos := headerSize
 	// Read all records and write to output.
 	for {
@@ -53,9 +53,9 @@ func Make(w io.WriteSeeker, r io.Reader) (err os.Error) {
 		h := hash.Sum32()
 		tableNum := h % 256
 		if htables[tableNum] == nil {
-			htables[tableNum] = new(vector.Vector)
+			htables[tableNum] = make([]slot, 1)
 		}
-		htables[tableNum].Push(slot{h, pos})
+		htables[tableNum] = append(htables[tableNum], slot{h, pos})
 		pos += 8 + klen + dlen
 	}
 
@@ -64,8 +64,8 @@ func Make(w io.WriteSeeker, r io.Reader) (err os.Error) {
 	// Create and reuse a single hash table.
 	maxSlots := 0
 	for _, slots := range htables {
-		if slots.Len() > maxSlots {
-			maxSlots = slots.Len()
+		if len(slots) > maxSlots {
+			maxSlots = len(slots)
 		}
 	}
 	slotTable := make([]slot, maxSlots*2)
@@ -79,7 +79,7 @@ func Make(w io.WriteSeeker, r io.Reader) (err os.Error) {
 			continue
 		}
 
-		nslots := uint32(slots.Len() * 2)
+		nslots := uint32(len(slots) * 2)
 		hashSlotTable := slotTable[:nslots]
 		// Reset table slots.
 		for j := 0; j < len(hashSlotTable); j++ {
@@ -87,8 +87,7 @@ func Make(w io.WriteSeeker, r io.Reader) (err os.Error) {
 			hashSlotTable[j].pos = 0
 		}
 
-		for j := 0; j < slots.Len(); j++ {
-			slot := slots.At(j).(slot)
+		for _, slot := range slots {
 			slotPos := (slot.h / 256) % nslots
 			for hashSlotTable[slotPos].pos != 0 {
 				slotPos++
@@ -136,12 +135,12 @@ func (rr *recReader) readByte() byte {
 
 func (rr *recReader) eatByte(c byte) {
 	if rr.readByte() != c {
-		panic(os.NewError("unexpected character"))
+		panic(errors.New("unexpected character"))
 	}
 }
 
 // There is no strconv.Atoui32, so make one here.
-func atoui32(s string) (n uint32, err os.Error) {
+func atoui32(s string) (n uint32, err error) {
 	iu64, err := strconv.Atoui64(s)
 	if err != nil {
 		return 0, err
@@ -171,7 +170,7 @@ func (rr *recReader) readNum(delim byte) uint32 {
 }
 
 func (rr *recReader) copyn(w io.Writer, n uint32) {
-	if _, err := io.Copyn(w, rr, int64(n)); err != nil {
+	if _, err := io.CopyN(w, rr, int64(n)); err != nil {
 		panic(err)
 	}
 }
@@ -192,7 +191,7 @@ type slot struct {
 	h, pos uint32
 }
 
-func writeSlots(w io.Writer, slots []slot, buf []byte) (err os.Error) {
+func writeSlots(w io.Writer, slots []slot, buf []byte) (err error) {
 	for _, np := range slots {
 		putNum(buf, np.h)
 		putNum(buf[4:], np.pos)

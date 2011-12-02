@@ -1,11 +1,12 @@
 package cdb
 
 import (
-	"os"
-	"fmt"
 	"bytes"
-	"testing"
+	"fmt"
+	"io"
 	"io/ioutil"
+	"os"
+	"testing"
 )
 
 type rec struct {
@@ -72,7 +73,7 @@ func TestCdb(t *testing.T) {
 		}
 		// Read all values, so should get EOF
 		_, err = c.FindNext(key)
-		if err != os.EOF {
+		if err != io.EOF {
 			t.Fatalf("Expected EOF, got %s", err)
 		}
 	}

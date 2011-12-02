@@ -1,9 +1,6 @@
 package cdb
 
-import (
-	"os"
-	"hash"
-)
+import "hash"
 
 const (
 	start = 5381 // Initial cdb checksum value.
@@ -32,21 +29,20 @@ func update(h uint32, p []byte) uint32 {
 	return h
 }
 
-func (d *digest) Write(p []byte) (int, os.Error) {
+func (d *digest) Write(p []byte) (int, error) {
 	d.h = update(d.h, p)
 	return len(p), nil
 }
 
 func (d *digest) Sum32() uint32 { return d.h }
 
-func (d *digest) Sum() []byte {
-	p := make([]byte, 4)
+func (d *digest) Sum(in []byte) []byte {
 	s := d.Sum32()
-	p[0] = byte(s >> 24)
-	p[1] = byte(s >> 16)
-	p[2] = byte(s >> 8)
-	p[3] = byte(s)
-	return p
+	in = append(in, byte(s>>24))
+	in = append(in, byte(s>>16))
+	in = append(in, byte(s>>8))
+	in = append(in, byte(s))
+	return in
 }
 
 func checksum(data []byte) uint32 { return update(start, data) }

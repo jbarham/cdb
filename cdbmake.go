@@ -1,17 +1,17 @@
 package main
 
 import (
-	"os"
-	"fmt"
-	"log"
-	"flag"
 	"bufio"
-	"path"
-	"io/ioutil"
+	"flag"
+	"fmt"
 	"github.com/jbarham/cdb.go"
+	"io/ioutil"
+	"log"
+	"os"
+	"path"
 )
 
-func exitOnErr(err os.Error) {
+func exitOnErr(err error) {
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -24,7 +24,7 @@ func usage() {
 
 func main() {
 	var tmp *os.File
-	var err os.Error
+	var err error
 
 	flag.Parse()
 	args := flag.Args()
