@@ -5,7 +5,6 @@ import (
 	"encoding/binary"
 	"errors"
 	"io"
-	"os"
 	"strconv"
 )
 
@@ -139,21 +138,6 @@ func (rr *recReader) eatByte(c byte) {
 	}
 }
 
-// There is no strconv.Atoui32, so make one here.
-func atoui32(s string) (n uint32, err error) {
-	iu64, err := strconv.Atoui64(s)
-	if err != nil {
-		return 0, err
-	}
-
-	n = uint32(iu64)
-	if uint64(n) != iu64 {
-		return 0, &strconv.NumError{s, os.ERANGE}
-	}
-
-	return n, nil
-}
-
 func (rr *recReader) readNum(delim byte) uint32 {
 	s, err := rr.ReadString(delim)
 	if err != nil {
@@ -161,12 +145,12 @@ func (rr *recReader) readNum(delim byte) uint32 {
 	}
 
 	s = s[:len(s)-1] // Strip delim
-	n, err := atoui32(s)
+	n, err := strconv.ParseUint(s, 10, 32)
 	if err != nil {
 		panic(err)
 	}
 
-	return n
+	return uint32(n)
 }
 
 func (rr *recReader) copyn(w io.Writer, n uint32) {
