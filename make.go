@@ -51,9 +51,6 @@ func Make(w io.WriteSeeker, r io.Reader) (err error) {
 		rr.eatByte('\n')
 		h := hash.Sum32()
 		tableNum := h % 256
-		if htables[tableNum] == nil {
-			htables[tableNum] = make([]slot, 1)
-		}
 		htables[tableNum] = append(htables[tableNum], slot{h, pos})
 		pos += 8 + klen + dlen
 	}
