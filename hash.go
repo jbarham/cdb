@@ -45,4 +45,6 @@ func (d *digest) Sum(in []byte) []byte {
 	return in
 }
 
+func (d *digest) BlockSize() int { return 1 }
+
 func checksum(data []byte) uint32 { return update(start, data) }
