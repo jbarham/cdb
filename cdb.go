@@ -1,4 +1,4 @@
-// Packages cdb reads and writes cdb ("constant database") files.
+// Package cdb reads and writes cdb ("constant database") files.
 //
 // See the original cdb specification and C implementation by D. J. Bernstein
 // at http://cr.yp.to/cdb.html.
