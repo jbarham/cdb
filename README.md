@@ -9,15 +9,15 @@ at http://cr.yp.to/cdb.html.
 
 Assuming you have a working Go environment, installation is simply:
 
-	goinstall github.com/jbarham/cdb.go
+	go get github.com/jbarham/cdb.go
 
-Once installed, do `godoc github.com/jbarham/cdb.go` to view the package's
-documentation.
+The package documentation can be viewed online at
+http://gopkgdoc.appspot.com/pkg/github.com/jbarham/cdb.go
+or on the command line by running `go doc github.com/jbarham/cdb.go`.
 
 The included self-test program `cdb_test.go` illustrates usage of the package.
 
 ## Utilities
 
 The cdb.go package includes ports of the programs `cdbdump` and `cdbmake` from
-the [original implementation](http://cr.yp.to/cdb/cdbmake.html).  Do `make -f Makefile.bin`
-to make them from the cdb.go directory.
+the [original implementation](http://cr.yp.to/cdb/cdbmake.html).
