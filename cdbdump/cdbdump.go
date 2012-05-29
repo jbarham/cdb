@@ -2,7 +2,7 @@ package main
 
 import (
 	"bufio"
-	"github.com/jbarham/cdb.go"
+	"github.com/jbarham/go-cdb"
 	"os"
 )
 
