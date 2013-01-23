@@ -1,6 +1,7 @@
 package cdb
 
 import (
+	"bufio"
 	"bytes"
 	"fmt"
 	"io"
@@ -41,6 +42,12 @@ func TestCdb(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Error opening %s: %s", tmp.Name(), err)
 	}
+
+	_, err = c.Data([]byte("does not exist"))
+	if err != io.EOF {
+		t.Fatalf("non-existant key should return io.EOF")
+	}
+
 	for _, rec := range records {
 		key := []byte(rec.key)
 		values := rec.values
@@ -91,6 +98,46 @@ func TestCdb(t *testing.T) {
 
 	if !bytes.Equal(buf.Bytes(), data) {
 		t.Fatalf("Dump round-trip failed")
+	}
+}
+
+func TestEmptyFile(t *testing.T) {
+	tmp, err := ioutil.TempFile("", "")
+	if err != nil {
+		t.Fatalf("Failed to create temp file: %s", err)
+	}
+
+	defer os.Remove(tmp.Name())
+
+	// Test Make
+	err = Make(tmp, bytes.NewBuffer([]byte("\n\n")))
+	if err != nil {
+		t.Fatalf("Make failed: %s", err)
+	}
+
+	// Check that all tables are length 0
+	if _, err = tmp.Seek(0, 0); err != nil {
+		t.Fatal(err)
+	}
+	rb := bufio.NewReader(tmp)
+	readNum := makeNumReader(rb)
+	for i := 0; i < 256; i++ {
+		_ = readNum() // table pointer
+		tableLen := readNum()
+		if tableLen != 0 {
+			t.Fatalf("table %d has non-zero length: %d", i, tableLen)
+		}
+	}
+
+	// Test reading records
+	c, err := Open(tmp.Name())
+	if err != nil {
+		t.Fatalf("Error opening %s: %s", tmp.Name(), err)
+	}
+
+	_, err = c.Data([]byte("does not exist"))
+	if err != io.EOF {
+		t.Fatalf("non-existant key should return io.EOF")
 	}
 }
 
