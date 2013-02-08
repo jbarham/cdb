@@ -109,7 +109,7 @@ func (c *Cdb) find(key []byte) (err error) {
 		h = checksum(key)
 		c.hpos, c.hslots = c.readNums((h << 3) & 2047)
 		if c.hslots == 0 {
-			return
+			return io.EOF
 		}
 		c.khash = h
 		h >>= 8
