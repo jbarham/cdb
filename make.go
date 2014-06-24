@@ -11,7 +11,7 @@ import (
 var BadFormatError = errors.New("bad format")
 
 // Make reads cdb-formatted records from r and writes a cdb-format database
-// to w.  See the documentation for Dump for details on the input record format. 
+// to w.  See the documentation for Dump for details on the input record format.
 func Make(w io.WriteSeeker, r io.Reader) (err error) {
 	defer func() { // Centralize error handling.
 		if e := recover(); e != nil {
