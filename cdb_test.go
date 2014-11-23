@@ -40,7 +40,7 @@ func TestCdbMake(t *testing.T) {
 
 func TestCdbDump(t *testing.T) {
 	f, buf := make_from_data(data, t), bytes.NewBuffer(nil)
-	err := Dump(buf, f.Reader())
+	err := Dump(buf, f.bytesReader())
 	if err != nil {
 		t.Fatalf("Dump failed: %s", err)
 	}
@@ -49,9 +49,26 @@ func TestCdbDump(t *testing.T) {
 	}
 }
 
+func TestCdbGet(t *testing.T) {
+	f := make_from_data(data, t)
+	c, buf := New(f.bytesReader()), bytes.NewBuffer(nil)
+	for _, rec := range records {
+		for skip, val := range rec.values {
+			buf.Reset()
+			if _, err := Get(buf, c, []byte(rec.key), skip); err != nil {
+				t.Fatalf("cdb.Get failed: %s", err)
+			}
+			if !bytes.Equal(buf.Bytes(), []byte(val)) {
+				t.Fatalf("cdb.Get failed: expected %q, got %q", val, buf.Bytes())
+			}
+			t.Logf("%q => %d: %q", rec.key, skip, val)
+		}
+	}
+}
+
 func TestCdbDataAndFind(t *testing.T) {
 	f := make_from_data(data, t)
-	c := New(f.ReaderAt())
+	c := New(f.bytesReader())
 
 	_, err := c.Data([]byte("does not exist"))
 	if err != io.EOF {
@@ -100,7 +117,7 @@ func TestCdbDataAndFind(t *testing.T) {
 
 func TestEmptyFile(t *testing.T) {
 	f := make_from_data([]byte("\n\n"), t)
-	readNum := makeNumReader(f.Reader())
+	readNum := makeNumReader(f.bytesReader())
 	for i := 0; i < 256; i++ {
 		_ = readNum() // table pointer
 		tableLen := readNum()
@@ -109,7 +126,7 @@ func TestEmptyFile(t *testing.T) {
 		}
 	}
 
-	c := New(f.ReaderAt())
+	c := New(f.bytesReader())
 	_, err := c.Data([]byte("does not exist"))
 	if err != io.EOF {
 		t.Fatalf("non-existent key should return io.EOF")
@@ -167,5 +184,4 @@ func (f *memFile) growIfNeeded(n int64) {
 	}
 }
 
-func (f *memFile) Reader() io.Reader     { return bytes.NewReader(f.buf) }
-func (f *memFile) ReaderAt() io.ReaderAt { return bytes.NewReader(f.buf) }
+func (f *memFile) bytesReader() *bytes.Reader { return bytes.NewReader(f.buf) }
