@@ -7,11 +7,21 @@ import (
 	"io"
 )
 
-// Dump reads the cdb-formatted data in r and dumps it as a series of formatted
-// records (+klen,dlen:key->data\n) and a final newline to w.
+// Dump reads records from the cdb-formatted data in r and dumps it as a
+// series of formatted records (+klen,dlen:key->data\n) and a final newline to w.
 // The output of Dump is suitable as input to Make.
 // See http://cr.yp.to/cdb/cdbmake.html for details on the record format.
-func Dump(w io.Writer, r io.Reader) (err error) {
+func Dump(w io.Writer, r io.Reader) error {
+	return DumpN(0, 0, w, r)
+}
+
+// DumpN reads n records, starting at record number o,  from the cdb-formatted
+// data in r and dumps it as a series of formatted records
+// (+klen,dlen:key->data\n) and a final newline to w.
+// If n is 0, then all of the records are dumped.
+// The output of DumpN is suitable as input to Make.
+// See http://cr.yp.to/cdb/cdbmake.html for details on the record format.
+func DumpN(n uint64, o uint64, w io.Writer, r io.Reader) (err error) {
 	defer func() { // Centralize exception handling.
 		if e := recover(); e != nil {
 			err = e.(error)
@@ -29,14 +39,18 @@ func Dump(w io.Writer, r io.Reader) (err error) {
 	}
 
 	pos := headerSize
-	for pos < eod {
+	recNum := uint64(0)
+	for pos < eod && (n == 0 || recNum < n) {
 		klen, dlen := readNum(), readNum()
-		rw.writeString(fmt.Sprintf("+%d,%d:", klen, dlen))
-		rw.copyn(rb, klen)
-		rw.writeString("->")
-		rw.copyn(rb, dlen)
-		rw.writeString("\n")
+		if recNum >= o {
+			rw.writeString(fmt.Sprintf("+%d,%d:", klen, dlen))
+			rw.copyn(rb, klen)
+			rw.writeString("->")
+			rw.copyn(rb, dlen)
+			rw.writeString("\n")
+		}
 		pos += 8 + klen + dlen
+		recNum++
 	}
 	rw.writeString("\n")
 

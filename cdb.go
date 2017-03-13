@@ -74,6 +74,45 @@ func (c *Cdb) Data(key []byte) (data []byte, err error) {
 	return
 }
 
+// DumpN returns n records, starting at record number o, from the cdb as an
+// array of [2][]byte values: key, data.
+// If n is 0, then all of the records are returned.
+func (c *Cdb) DumpN(n uint64, o uint64) (recs [][2][]byte) {
+	intBuf := make([]byte, 4)
+	pos := uint32(0)
+	readNum := func () uint32 {
+		c.r.ReadAt(intBuf, int64(pos))
+		pos += 4
+		return binary.LittleEndian.Uint32(intBuf)
+	}
+
+	eod := readNum()
+	pos = headerSize  // skip header
+	recNum := uint64(0)
+	for pos < eod && (n == 0 || recNum < n) {
+		// CDB records are laid out as: [klen (uint32)] [dlen (uint32)] [key (klen bytes)] [data (dlen bytes)]
+		klen := readNum()
+		dlen := readNum()
+		if recNum >= o {
+			// read key and data:
+			k := make([]byte, klen)
+			d := make([]byte, dlen)
+			c.r.ReadAt(k, int64(pos))
+			pos += klen
+			c.r.ReadAt(d, int64(pos))
+			pos += dlen
+			recs = append(recs, [2][]byte{k, d})
+		} else {
+			// skip:
+			pos += klen + dlen
+		}
+
+		recNum++
+	}
+
+	return
+}
+
 // FindStart resets the cdb to search for the first record under a new key.
 func (c *Cdb) FindStart() { c.loop = 0 }
 
