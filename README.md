@@ -1,6 +1,6 @@
-# go-cdb
+# cdb
 
-go-cdb is a pure [Go](http://golang.org/) package to read and write cdb ("constant database") files.
+This is a [Go](http://golang.org/) package to read and write cdb ("constant database") files.
 
 The cdb file format is a machine-independent format with the following features:
 
@@ -15,15 +15,15 @@ at http://cr.yp.to/cdb.html.
 
 Assuming you have a working Go environment, installation is simply:
 
-	go get github.com/jbarham/go-cdb
+	go get github.com/jbarham/cdb
 
 The package documentation can be viewed online at
-http://gopkgdoc.appspot.com/pkg/github.com/jbarham/go-cdb
-or on the command line by running `go doc github.com/jbarham/go-cdb`.
+https://pkg.go.dev/github.com/jbarham/cdb
+or on the command line by running `go doc github.com/jbarham/cdb`.
 
 The included self-test program `cdb_test.go` illustrates usage of the package.
 
 ## Utilities
 
-The go-cdb package includes ports of the programs `cdbdump` and `cdbmake` from
+The cdb package includes ports of the programs `cdbdump` and `cdbmake` from
 the [original implementation](http://cr.yp.to/cdb/cdbmake.html).

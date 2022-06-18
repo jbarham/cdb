@@ -4,11 +4,12 @@ import (
 	"bufio"
 	"flag"
 	"fmt"
-	"github.com/jbarham/go-cdb"
 	"io/ioutil"
 	"log"
 	"os"
 	"path"
+
+	"github.com/jbarham/cdb"
 )
 
 func exitOnErr(err error) {
