@@ -44,12 +44,11 @@ func Dump(w io.Writer, r io.Reader) (err error) {
 }
 
 func makeNumReader(r io.Reader) func() uint32 {
-	buf := make([]byte, 4)
-	return func() uint32 {
-		if _, err := r.Read(buf); err != nil {
+	return func() (n uint32) {
+		if err := binary.Read(r, binary.LittleEndian, &n); err != nil {
 			panic(err)
 		}
-		return binary.LittleEndian.Uint32(buf)
+		return
 	}
 }
 
